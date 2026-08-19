@@ -97,19 +97,41 @@ export function requireSiteId(ctx: Context): string {
   return ctx.siteId;
 }
 
-/** The team the token can read; anything else is a forgery. */
+/**
+ * The team the token can act for; anything else is a forgery.
+ *
+ * Measured 2026-08-19: the extension token is scope-limited and Netlify's
+ * proxy answers 403 to `GET /accounts/{id}` without `user:read`. The proof
+ * therefore spends the token on what the extension IS allowed to read: the
+ * team's sites (`site:read`) — which also yield the team's slug and name for
+ * the connect link — and, for a team with no sites yet, the extension's own
+ * team configuration (the extension API validates the token for that
+ * installation).
+ */
 export async function proveTeam(ctx: Context): Promise<NetlifyTeamRecord> {
   const teamId = requireTeamId(ctx);
   try {
-    const account = (await ctx.client.getAccount(teamId)) as NetlifyTeamRecord;
-    if (account.id !== teamId) {
-      throw new Error("account id mismatch");
+    const sites = (await ctx.client.getSites()) as unknown as NetlifySiteRecord[];
+    const own = sites.filter((site) => site.account_id === teamId);
+    if (own.length > 0) {
+      const first = own[0];
+      return {
+        id: teamId,
+        ...(first?.account_slug !== undefined ? { slug: first.account_slug } : {}),
+        ...((first as NetlifySiteRecord & { account_name?: string }).account_name !== undefined
+          ? { name: (first as NetlifySiteRecord & { account_name?: string }).account_name }
+          : {}),
+      };
     }
-    return account;
+    if (sites.length > 0) {
+      // The token reads sites, none of them this team's: a token for another team.
+      throw new Error("the token's sites belong to another team");
+    }
+    // No sites at all: fall back to the extension API, which validates the
+    // token against this team's installation (null = installed, no config yet).
+    await ctx.client.getTeamConfiguration(teamId);
+    return { id: teamId };
   } catch (err) {
-    // P3 probe: the underlying Netlify/Jigsaw answer is surfaced in the message
-    // (no secret can be in it) so the first live runs tell us which call the
-    // extension token is allowed to make; tighten once measured.
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: `Netlify did not accept this request for the team (${describe(err)})`,
