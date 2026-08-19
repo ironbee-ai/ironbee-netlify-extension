@@ -67,6 +67,22 @@ export interface NetlifyTeamRecord {
   slug?: string;
 }
 
+/** One line about a failed Netlify call: status + text when the client carries them, else the message. */
+function describe(err: unknown): string {
+  if (err !== null && typeof err === "object") {
+    const e = err as { status?: number; message?: string; text?: string; json?: unknown };
+    const parts = [
+      e.status !== undefined ? `status ${String(e.status)}` : null,
+      typeof e.message === "string" ? e.message.slice(0, 160) : null,
+      typeof e.text === "string" ? e.text.slice(0, 160) : null,
+    ].filter((p): p is string => p !== null);
+    if (parts.length > 0) {
+      return parts.join(" | ");
+    }
+  }
+  return String(err).slice(0, 160);
+}
+
 export function requireTeamId(ctx: Context): string {
   if (!ctx.teamId) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "teamId is required" });
@@ -91,7 +107,14 @@ export async function proveTeam(ctx: Context): Promise<NetlifyTeamRecord> {
     }
     return account;
   } catch (err) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "Netlify did not accept this request for the team", cause: err });
+    // P3 probe: the underlying Netlify/Jigsaw answer is surfaced in the message
+    // (no secret can be in it) so the first live runs tell us which call the
+    // extension token is allowed to make; tighten once measured.
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: `Netlify did not accept this request for the team (${describe(err)})`,
+      cause: err,
+    });
   }
 }
 
@@ -103,7 +126,11 @@ export async function proveSite(ctx: Context): Promise<NetlifySiteRecord> {
   try {
     site = (await ctx.client.getSite(siteId)) as unknown as NetlifySiteRecord;
   } catch (err) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "Netlify did not accept this request for the site", cause: err });
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: `Netlify did not accept this request for the site (${describe(err)})`,
+      cause: err,
+    });
   }
   if (site.id !== siteId || (site.account_id !== undefined && site.account_id !== teamId)) {
     throw new TRPCError({ code: "FORBIDDEN", message: "This site does not belong to the team" });
