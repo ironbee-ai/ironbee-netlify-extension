@@ -1,0 +1,1 @@
+{"root":["./tailwind.config.ts","./vite.config.ts","./vitest.config.ts","./src/index.ts","./src/endpoints/trpc.ts","./src/lib/ironbee-api.ts","./src/schema/site-config.ts","./src/schema/team-config.ts","./src/server/netlify-proof.ts","./src/server/router.ts","./src/server/trpc.ts","./src/types/images.d.ts","./src/types/stylesheets.d.ts","./tests/sign.test.ts"],"version":"5.9.3"}

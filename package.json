@@ -1,0 +1,43 @@
+{
+  "name": "ironbee-netlify-extension",
+  "version": "0.0.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "netlify-extension build",
+    "dev": "netlify-extension dev",
+    "dev:open": "netlify-extension dev --open",
+    "typecheck": "tsc -b",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@netlify/functions": "^4.0.0",
+    "@netlify/sdk": "^5.0.4",
+    "@tanstack/react-query": "^5.62.1",
+    "@trpc/client": "^11.4.3",
+    "@trpc/react-query": "^11.4.3",
+    "@trpc/server": "^11.4.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@netlify/netlify-plugin-netlify-extension": "^1.0.0",
+    "@tsconfig/node18": "latest",
+    "@tsconfig/recommended": "latest",
+    "@tsconfig/strictest": "latest",
+    "@tsconfig/vite-react": "latest",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.7",
+    "netlify-cli": "latest",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.19",
+    "vitest": "^3.0.0"
+  }
+}

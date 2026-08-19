@@ -1,0 +1,16 @@
+# The slug is assigned by Netlify when the extension is created in the UI
+# (Extensions > Created by your team > Create an extension) — Netlify appends a
+# nanoid; paste the final slug here and redeploy. dev extension: ironbee-dev,
+# prod extension: ironbee (see the IronBee monorepo's Netlify roadmap).
+config:
+  slug: ironbee-dev
+  name: IronBee
+  description: >-
+    Automated AI testing for your deploy previews. Every preview is opened in a real
+    browser and exercised like a user; the result lands on the pull request and on
+    the deploy page.
+  ui:
+    surfaces:
+      - extension-team-configuration
+      - extension-top-level-site-configuration
+      - extension-site-deploy
